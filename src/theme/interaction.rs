@@ -4,9 +4,11 @@ use crate::{asset_tracking::LoadResource, audio::sound_effect};
 
 pub(super) fn plugin(app: &mut App) {
     app.load_resource::<InteractionAssets>();
-    app.add_observer(on_click)
-        .add_observer(on_hover)
-        .add_observer(on_out);
+    app.add_observer(apply_interaction_palette_on_click)
+        .add_observer(apply_interaction_palette_on_over)
+        .add_observer(apply_interaction_palette_on_out)
+        .add_observer(play_sound_effect_on_click)
+        .add_observer(play_sound_effect_on_over);
 }
 
 /// Palette for widget interactions. Add this to an entity that supports
@@ -20,20 +22,37 @@ pub struct InteractionPalette {
     pub pressed: Color,
 }
 
-fn apply_interaction_palette(
-    mut palette_query: Query<
-        (&Interaction, &InteractionPalette, &mut BackgroundColor),
-        Changed<Interaction>,
-    >,
+fn apply_interaction_palette_on_click(
+    click: On<Pointer<Click>>,
+    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
 ) {
-    for (interaction, palette, mut background) in &mut palette_query {
-        *background = match interaction {
-            Interaction::None => palette.none,
-            Interaction::Hovered => palette.hovered,
-            Interaction::Pressed => palette.pressed,
-        }
-        .into();
-    }
+    let Ok((palette, mut bg)) = palette_q.get_mut(click.event_target()) else {
+        return;
+    };
+
+    *bg = palette.pressed.into();
+}
+
+fn apply_interaction_palette_on_over(
+    click: On<Pointer<Over>>,
+    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
+) {
+    let Ok((palette, mut bg)) = palette_q.get_mut(click.event_target()) else {
+        return;
+    };
+
+    *bg = palette.hovered.into();
+}
+
+fn apply_interaction_palette_on_out(
+    click: On<Pointer<Out>>,
+    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
+) {
+    let Ok((palette, mut bg)) = palette_q.get_mut(click.event_target()) else {
+        return;
+    };
+
+    *bg = palette.none.into();
 }
 
 #[derive(Resource, Asset, Clone, Reflect)]
@@ -55,77 +74,26 @@ impl FromWorld for InteractionAssets {
     }
 }
 
-fn play_on_hover_sound_effect(
-    trigger: On<Pointer<Over>>,
-    mut commands: Commands,
+fn play_sound_effect_on_click(
+    _: On<Pointer<Click>>,
     interaction_assets: Option<Res<InteractionAssets>>,
-    interaction_query: Query<(), With<Interaction>>,
+    mut commands: Commands,
 ) {
     let Some(interaction_assets) = interaction_assets else {
         return;
     };
 
-    if interaction_query.contains(trigger.entity) {
-        commands.spawn(sound_effect(interaction_assets.hover.clone()));
-    }
-}
-
-fn play_on_click_sound_effect(
-    trigger: On<Pointer<Click>>,
-    mut commands: Commands,
-    interaction_assets: Option<Res<InteractionAssets>>,
-    interaction_query: Query<(), With<Interaction>>,
-) {
-    let Some(interaction_assets) = interaction_assets else {
-        return;
-    };
-
-    if interaction_query.contains(trigger.entity) {
-        commands.spawn(sound_effect(interaction_assets.click.clone()));
-    }
-}
-
-fn on_click(
-    click: On<Pointer<Click>>,
-    interaction_assets: Option<Res<InteractionAssets>>,
-    mut commands: Commands,
-    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
-) {
-    let Some(interaction_assets) = interaction_assets else {
-        return;
-    };
-    let Ok((palette, mut bg)) = palette_q.get_mut(click.event_target()) else {
-        return;
-    };
-
-    *bg = palette.pressed.into();
     commands.spawn(sound_effect(interaction_assets.click.clone()));
 }
 
-fn on_hover(
-    hover: On<Pointer<Over>>,
+fn play_sound_effect_on_over(
+    _: On<Pointer<Over>>,
     interaction_assets: Option<Res<InteractionAssets>>,
     mut commands: Commands,
-    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
 ) {
     let Some(interaction_assets) = interaction_assets else {
         return;
     };
-    let Ok((palette, mut bg)) = palette_q.get_mut(hover.event_target()) else {
-        return;
-    };
 
-    *bg = palette.hovered.into();
     commands.spawn(sound_effect(interaction_assets.hover.clone()));
-}
-
-fn on_out(
-    hover: On<Pointer<Out>>,
-    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
-) {
-    let Ok((palette, mut bg)) = palette_q.get_mut(hover.event_target()) else {
-        return;
-    };
-
-    *bg = palette.none.into();
 }
