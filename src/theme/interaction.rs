@@ -3,11 +3,10 @@ use bevy::prelude::*;
 use crate::{asset_tracking::LoadResource, audio::sound_effect};
 
 pub(super) fn plugin(app: &mut App) {
-    app.add_systems(Update, apply_interaction_palette);
-
     app.load_resource::<InteractionAssets>();
-    app.add_observer(play_on_hover_sound_effect);
-    app.add_observer(play_on_click_sound_effect);
+    app.add_observer(on_click)
+        .add_observer(on_hover)
+        .add_observer(on_out);
 }
 
 /// Palette for widget interactions. Add this to an entity that supports
@@ -84,4 +83,49 @@ fn play_on_click_sound_effect(
     if interaction_query.contains(trigger.entity) {
         commands.spawn(sound_effect(interaction_assets.click.clone()));
     }
+}
+
+fn on_click(
+    click: On<Pointer<Click>>,
+    interaction_assets: Option<Res<InteractionAssets>>,
+    mut commands: Commands,
+    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
+) {
+    let Some(interaction_assets) = interaction_assets else {
+        return;
+    };
+    let Ok((palette, mut bg)) = palette_q.get_mut(click.event_target()) else {
+        return;
+    };
+
+    *bg = palette.pressed.into();
+    commands.spawn(sound_effect(interaction_assets.click.clone()));
+}
+
+fn on_hover(
+    hover: On<Pointer<Over>>,
+    interaction_assets: Option<Res<InteractionAssets>>,
+    mut commands: Commands,
+    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
+) {
+    let Some(interaction_assets) = interaction_assets else {
+        return;
+    };
+    let Ok((palette, mut bg)) = palette_q.get_mut(hover.event_target()) else {
+        return;
+    };
+
+    *bg = palette.hovered.into();
+    commands.spawn(sound_effect(interaction_assets.hover.clone()));
+}
+
+fn on_out(
+    hover: On<Pointer<Out>>,
+    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
+) {
+    let Ok((palette, mut bg)) = palette_q.get_mut(hover.event_target()) else {
+        return;
+    };
+
+    *bg = palette.none.into();
 }
