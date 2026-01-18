@@ -34,10 +34,10 @@ fn apply_interaction_palette_on_click(
 }
 
 fn apply_interaction_palette_on_over(
-    click: On<Pointer<Over>>,
+    over: On<Pointer<Over>>,
     mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
 ) {
-    let Ok((palette, mut bg)) = palette_q.get_mut(click.event_target()) else {
+    let Ok((palette, mut bg)) = palette_q.get_mut(over.event_target()) else {
         return;
     };
 
@@ -45,10 +45,10 @@ fn apply_interaction_palette_on_over(
 }
 
 fn apply_interaction_palette_on_out(
-    click: On<Pointer<Out>>,
+    out: On<Pointer<Out>>,
     mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
 ) {
-    let Ok((palette, mut bg)) = palette_q.get_mut(click.event_target()) else {
+    let Ok((palette, mut bg)) = palette_q.get_mut(out.event_target()) else {
         return;
     };
 
