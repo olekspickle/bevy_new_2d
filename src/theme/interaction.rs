@@ -4,11 +4,11 @@ use crate::{asset_tracking::LoadResource, audio::sound_effect};
 
 pub(super) fn plugin(app: &mut App) {
     app.load_resource::<InteractionAssets>();
-    app.add_observer(apply_interaction_palette_on_click)
-        .add_observer(apply_interaction_palette_on_over)
-        .add_observer(apply_interaction_palette_on_out)
-        .add_observer(play_sound_effect_on_click)
-        .add_observer(play_sound_effect_on_over);
+    app.add_observer(apply_interaction_palette_on_click);
+    app.add_observer(apply_interaction_palette_on_over);
+    app.add_observer(apply_interaction_palette_on_out);
+    app.add_observer(play_sound_effect_on_click);
+    app.add_observer(play_sound_effect_on_over);
 }
 
 /// Palette for widget interactions. Add this to an entity that supports
@@ -24,9 +24,9 @@ pub struct InteractionPalette {
 
 fn apply_interaction_palette_on_click(
     click: On<Pointer<Click>>,
-    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
+    mut palette_query: Query<(&InteractionPalette, &mut BackgroundColor)>,
 ) {
-    let Ok((palette, mut bg)) = palette_q.get_mut(click.event_target()) else {
+    let Ok((palette, mut bg)) = palette_query.get_mut(click.event_target()) else {
         return;
     };
 
@@ -35,9 +35,9 @@ fn apply_interaction_palette_on_click(
 
 fn apply_interaction_palette_on_over(
     over: On<Pointer<Over>>,
-    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
+    mut palette_query: Query<(&InteractionPalette, &mut BackgroundColor)>,
 ) {
-    let Ok((palette, mut bg)) = palette_q.get_mut(over.event_target()) else {
+    let Ok((palette, mut bg)) = palette_query.get_mut(over.event_target()) else {
         return;
     };
 
@@ -46,9 +46,9 @@ fn apply_interaction_palette_on_over(
 
 fn apply_interaction_palette_on_out(
     out: On<Pointer<Out>>,
-    mut palette_q: Query<(&InteractionPalette, &mut BackgroundColor)>,
+    mut palette_query: Query<(&InteractionPalette, &mut BackgroundColor)>,
 ) {
-    let Ok((palette, mut bg)) = palette_q.get_mut(out.event_target()) else {
+    let Ok((palette, mut bg)) = palette_query.get_mut(out.event_target()) else {
         return;
     };
 
@@ -76,24 +76,16 @@ impl FromWorld for InteractionAssets {
 
 fn play_sound_effect_on_click(
     _: On<Pointer<Click>>,
-    interaction_assets: Option<Res<InteractionAssets>>,
+    interaction_assets: If<Res<InteractionAssets>>,
     mut commands: Commands,
 ) {
-    let Some(interaction_assets) = interaction_assets else {
-        return;
-    };
-
     commands.spawn(sound_effect(interaction_assets.click.clone()));
 }
 
 fn play_sound_effect_on_over(
     _: On<Pointer<Over>>,
-    interaction_assets: Option<Res<InteractionAssets>>,
+    interaction_assets: If<Res<InteractionAssets>>,
     mut commands: Commands,
 ) {
-    let Some(interaction_assets) = interaction_assets else {
-        return;
-    };
-
     commands.spawn(sound_effect(interaction_assets.hover.clone()));
 }
