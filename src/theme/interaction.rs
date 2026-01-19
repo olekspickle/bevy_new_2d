@@ -3,10 +3,11 @@ use bevy::prelude::*;
 use crate::{asset_tracking::LoadResource, audio::sound_effect};
 
 pub(super) fn plugin(app: &mut App) {
-    app.load_resource::<InteractionAssets>();
     app.add_observer(apply_interaction_palette_on_click);
     app.add_observer(apply_interaction_palette_on_over);
     app.add_observer(apply_interaction_palette_on_out);
+
+    app.load_resource::<InteractionAssets>();
     app.add_observer(play_sound_effect_on_click);
     app.add_observer(play_sound_effect_on_over);
 }
