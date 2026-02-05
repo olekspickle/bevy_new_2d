@@ -7,7 +7,7 @@ This template uses [GitHub workflows](https://docs.github.com/en/actions/using-w
 
 ## CI (testing)
 
-The [CI workflow](.github/workflows/ci.yaml) will trigger on every commit or PR to `main`, and it will:
+The [CI workflow](../.github/workflows/ci.yaml) will trigger on every commit or PR to `main`, and it will:
 
 - Check formatting.
 - Check documentation.
