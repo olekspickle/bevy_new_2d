@@ -43,7 +43,7 @@ fn apply_interaction_palette_on_release(
         return;
     };
 
-    *bg = palette.none.into();
+    *bg = palette.hovered.into();
 }
 
 fn apply_interaction_palette_on_over(
